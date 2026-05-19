@@ -89,6 +89,21 @@ export class TaskListQueryDto extends createZodDto(taskListQuerySchema) {
 
   @ApiPropertyOptional()
   declare assigneeId?: string;
+
+  @ApiPropertyOptional({
+    enum: ['updatedAt', 'createdAt', 'dueDate', 'priority', 'title', 'status', 'position'],
+  })
+  declare sortBy?:
+    | 'updatedAt'
+    | 'createdAt'
+    | 'dueDate'
+    | 'priority'
+    | 'title'
+    | 'status'
+    | 'position';
+
+  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc' })
+  declare sortOrder: 'asc' | 'desc';
 }
 
 export class TaskAssigneeDto {

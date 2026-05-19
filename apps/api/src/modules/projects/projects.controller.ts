@@ -56,6 +56,8 @@ export class ProjectsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, enum: ['ACTIVE', 'ARCHIVED', 'COMPLETED'] })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['updatedAt', 'createdAt', 'name', 'status'] })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({ status: 200, type: PaginatedProjectDto })
   list(@Param('workspaceId') workspaceId: string, @Query() query: unknown) {
     const parsed = projectListQuerySchema.parse(query);

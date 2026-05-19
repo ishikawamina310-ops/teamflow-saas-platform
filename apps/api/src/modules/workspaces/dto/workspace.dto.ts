@@ -133,3 +133,109 @@ export class InviteMemberResultDto {
   @ApiPropertyOptional({ type: WorkspaceInviteDto })
   invite?: WorkspaceInviteDto;
 }
+
+export class WorkspaceDashboardStatsDto {
+  @ApiProperty({ example: 8 })
+  memberCount!: number;
+
+  @ApiProperty({ example: 3 })
+  projectCount!: number;
+
+  @ApiProperty({ example: 24 })
+  totalTaskCount!: number;
+
+  @ApiProperty({ example: 10 })
+  todoTaskCount!: number;
+
+  @ApiProperty({ example: 6 })
+  inProgressTaskCount!: number;
+
+  @ApiProperty({ example: 4 })
+  reviewTaskCount!: number;
+
+  @ApiProperty({ example: 4 })
+  doneTaskCount!: number;
+
+  @ApiProperty({ example: 2 })
+  overdueTaskCount!: number;
+}
+
+export class WorkspaceDashboardRecentTaskDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  title!: string;
+
+  @ApiProperty({ enum: ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] })
+  status!: 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';
+
+  @ApiProperty({ enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] })
+  priority!: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
+  @ApiProperty()
+  projectId!: string;
+
+  @ApiProperty()
+  projectName!: string;
+
+  @ApiProperty({ nullable: true })
+  assigneeName!: string | null;
+
+  @ApiProperty({ nullable: true })
+  dueDate!: string | null;
+
+  @ApiProperty()
+  updatedAt!: string;
+}
+
+export class WorkspaceDashboardActivityDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty({
+    enum: ['CREATED', 'UPDATED', 'DELETED', 'ASSIGNED', 'COMMENTED', 'STATUS_CHANGED', 'JOINED', 'LEFT', 'INVITED'],
+  })
+  action!:
+    | 'CREATED'
+    | 'UPDATED'
+    | 'DELETED'
+    | 'ASSIGNED'
+    | 'COMMENTED'
+    | 'STATUS_CHANGED'
+    | 'JOINED'
+    | 'LEFT'
+    | 'INVITED';
+
+  @ApiProperty()
+  targetType!: string;
+
+  @ApiProperty()
+  targetId!: string;
+
+  @ApiProperty()
+  actorId!: string;
+
+  @ApiProperty()
+  actorName!: string;
+
+  @ApiProperty()
+  createdAt!: string;
+}
+
+export class WorkspaceDashboardOverviewDto {
+  @ApiProperty()
+  workspaceId!: string;
+
+  @ApiProperty()
+  workspaceName!: string;
+
+  @ApiProperty({ type: WorkspaceDashboardStatsDto })
+  stats!: WorkspaceDashboardStatsDto;
+
+  @ApiProperty({ type: [WorkspaceDashboardRecentTaskDto] })
+  recentTasks!: WorkspaceDashboardRecentTaskDto[];
+
+  @ApiProperty({ type: [WorkspaceDashboardActivityDto] })
+  recentActivities!: WorkspaceDashboardActivityDto[];
+}

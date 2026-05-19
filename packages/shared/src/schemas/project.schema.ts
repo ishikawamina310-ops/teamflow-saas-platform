@@ -17,6 +17,7 @@ export const updateProjectSchema = createProjectSchema.partial();
 
 export const projectListQuerySchema = paginationQuerySchema.extend({
   status: projectStatusSchema.optional(),
+  sortBy: z.enum(['updatedAt', 'createdAt', 'name', 'status']).optional(),
 });
 
 export const projectParamsSchema = z.object({

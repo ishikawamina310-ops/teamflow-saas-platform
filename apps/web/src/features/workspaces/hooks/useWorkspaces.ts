@@ -14,6 +14,7 @@ export const workspaceKeys = {
   list: () => [...workspaceKeys.all, 'list'] as const,
   detail: (id: string) => [...workspaceKeys.all, 'detail', id] as const,
   members: (id: string) => [...workspaceKeys.all, 'members', id] as const,
+  dashboardOverview: (id: string) => [...workspaceKeys.all, 'dashboard-overview', id] as const,
 };
 
 export function useWorkspaces() {
@@ -70,6 +71,34 @@ export function useCreateWorkspace() {
     onError: (err: unknown) => {
       toast.error(extractErrorMessage(err));
     },
+  });
+}
+
+export function useDeleteWorkspace() {
+  const qc = useQueryClient();
+  const currentWorkspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
+  const setCurrentWorkspace = useWorkspaceStore((s) => s.setCurrentWorkspace);
+
+  return useMutation({
+    mutationFn: (workspaceId: string) => workspacesApi.delete(workspaceId),
+    onSuccess: (_data, deletedId) => {
+      if (currentWorkspaceId === deletedId) {
+        setCurrentWorkspace('');
+      }
+      qc.invalidateQueries({ queryKey: workspaceKeys.list() });
+      toast.success('Workspace deleted');
+    },
+    onError: (err: unknown) => {
+      toast.error(extractErrorMessage(err));
+    },
+  });
+}
+
+export function useWorkspaceDashboardOverview(workspaceId?: string) {
+  return useQuery({
+    queryKey: workspaceKeys.dashboardOverview(workspaceId ?? 'none'),
+    queryFn: () => workspacesApi.getDashboardOverview(workspaceId!),
+    enabled: Boolean(workspaceId),
   });
 }
 

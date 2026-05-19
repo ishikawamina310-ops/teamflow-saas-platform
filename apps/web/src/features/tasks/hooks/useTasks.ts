@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateTaskInput,
   MoveTaskInput,
+  PaginatedResult,
+  TaskSummary,
   TaskListQuery,
   UpdateTaskInput,
 } from '@teamflow/shared';
@@ -38,13 +40,65 @@ export function useTask(workspaceId?: string, taskId?: string) {
 export function useCreateTask(workspaceId?: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ projectId, input }: { projectId: string; input: CreateTaskInput }) =>
-      tasksApi.create(workspaceId!, projectId, input),
+    mutationFn: (variables: {
+      projectId: string;
+      projectName?: string;
+      input: CreateTaskInput;
+    }) => tasksApi.create(workspaceId!, variables.projectId, variables.input),
+    onMutate: async ({ projectId, projectName, input }) => {
+      const listQueryKey = [...taskKeys.all, 'list', workspaceId];
+      await qc.cancelQueries({ queryKey: listQueryKey });
+
+      const previous = qc.getQueriesData<PaginatedResult<TaskSummary>>({
+        queryKey: listQueryKey,
+      });
+
+      previous.forEach(([key, data]) => {
+        if (!data) return;
+        const laneMaxPosition = data.items
+          .filter((task) => task.status === (input.status ?? 'TODO'))
+          .reduce((max, task) => Math.max(max, task.position), 0);
+
+        const optimisticTask: TaskSummary = {
+          id: `temp-${crypto.randomUUID()}`,
+          workspaceId: workspaceId!,
+          projectId,
+          projectName: projectName ?? 'Project',
+          title: input.title,
+          description: input.description ?? null,
+          status: input.status ?? 'TODO',
+          priority: input.priority ?? 'MEDIUM',
+          position: input.position ?? laneMaxPosition + 1000,
+          labels: input.labels ?? [],
+          dueDate: input.dueDate ? new Date(input.dueDate).toISOString() : null,
+          authorId: 'optimistic',
+          assigneeId: input.assigneeId ?? null,
+          assignee: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        qc.setQueryData<PaginatedResult<TaskSummary>>(key, {
+          ...data,
+          items: [optimisticTask, ...data.items],
+          total: data.total + 1,
+        });
+      });
+
+      return { previous };
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: taskKeys.all });
       toast.success('Task created');
     },
-    onError: (err: unknown) => toast.error(extractErrorMessage(err)),
+    onError: (err: unknown, _variables, context) => {
+      context?.previous.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+      toast.error(extractErrorMessage(err));
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: taskKeys.all });
+    },
   });
 }
 
@@ -65,10 +119,35 @@ export function useMoveTask(workspaceId?: string) {
   return useMutation({
     mutationFn: ({ taskId, input }: { taskId: string; input: MoveTaskInput }) =>
       tasksApi.move(workspaceId!, taskId, input),
-    onSuccess: () => {
+    onMutate: async ({ taskId, input }) => {
+      const listQueryKey = [...taskKeys.all, 'list', workspaceId];
+      await qc.cancelQueries({ queryKey: listQueryKey });
+
+      const previous = qc.getQueriesData<PaginatedResult<TaskSummary>>({
+        queryKey: listQueryKey,
+      });
+
+      previous.forEach(([key, data]) => {
+        if (!data) return;
+        qc.setQueryData<PaginatedResult<TaskSummary>>(key, {
+          ...data,
+          items: data.items.map((task) =>
+            task.id === taskId ? { ...task, status: input.status, position: input.position } : task,
+          ),
+        });
+      });
+
+      return { previous };
+    },
+    onError: (err: unknown, _variables, context) => {
+      context?.previous.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+      toast.error(extractErrorMessage(err));
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: taskKeys.all });
     },
-    onError: (err: unknown) => toast.error(extractErrorMessage(err)),
   });
 }
 

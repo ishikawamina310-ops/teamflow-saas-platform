@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ActivityAction, type TaskPriority, type TaskStatus } from '@prisma/client';
+import { ActivityAction, type Prisma, type TaskPriority, type TaskStatus } from '@prisma/client';
 import {
   type CreateTaskInput,
   type MoveTaskInput,
@@ -56,7 +56,7 @@ export class TasksService {
           project: { select: { id: true, name: true, workspaceId: true } },
           assignee: { select: { id: true, email: true, name: true, avatarUrl: true } },
         },
-        orderBy: [{ status: 'asc' }, { position: 'asc' }, { updatedAt: 'desc' }],
+        orderBy: this.buildOrderBy(query),
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -331,5 +331,27 @@ export class TasksService {
       createdAt: task.createdAt.toISOString(),
       updatedAt: task.updatedAt.toISOString(),
     };
+  }
+
+  private buildOrderBy(query: TaskListQuery): Prisma.TaskOrderByWithRelationInput[] {
+    const sortOrder = query.sortOrder ?? 'desc';
+
+    switch (query.sortBy) {
+      case 'createdAt':
+        return [{ createdAt: sortOrder }];
+      case 'dueDate':
+        return [{ dueDate: sortOrder }, { updatedAt: 'desc' }];
+      case 'priority':
+        return [{ priority: sortOrder }, { updatedAt: 'desc' }];
+      case 'title':
+        return [{ title: sortOrder }];
+      case 'status':
+        return [{ status: sortOrder }, { position: 'asc' }];
+      case 'position':
+        return [{ position: sortOrder }];
+      case 'updatedAt':
+      default:
+        return [{ status: 'asc' }, { position: 'asc' }, { updatedAt: 'desc' }];
+    }
   }
 }

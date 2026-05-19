@@ -1,9 +1,15 @@
 import { ProjectsPageContent } from '@/features/projects/components/ProjectsPageContent';
 
-export default function WorkspaceProjectsPage({
+export default async function WorkspaceProjectsPage({
   params,
 }: {
-  params: { workspaceId: string };
+  params: Promise<{ workspaceId: string }>;
 }) {
-  return <ProjectsPageContent workspaceId={params.workspaceId} />;
+  const { workspaceId } = await params;
+
+  return (
+    <ProjectsPageContent
+      workspaceId={workspaceId}
+    />
+  );
 }

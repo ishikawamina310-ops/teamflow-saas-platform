@@ -47,6 +47,12 @@ export class ProjectListQueryDto extends createZodDto(projectListQuerySchema) {
 
   @ApiPropertyOptional({ enum: ['ACTIVE', 'ARCHIVED', 'COMPLETED'] })
   declare status?: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED';
+
+  @ApiPropertyOptional({ enum: ['updatedAt', 'createdAt', 'name', 'status'] })
+  declare sortBy?: 'updatedAt' | 'createdAt' | 'name' | 'status';
+
+  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc' })
+  declare sortOrder: 'asc' | 'desc';
 }
 
 export class ProjectSummaryDto {

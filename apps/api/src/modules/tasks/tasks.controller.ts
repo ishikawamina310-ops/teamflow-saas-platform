@@ -62,6 +62,12 @@ export class TasksController {
   @ApiQuery({ name: 'status', required: false, enum: ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] })
   @ApiQuery({ name: 'priority', required: false, enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] })
   @ApiQuery({ name: 'assigneeId', required: false, type: String })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['updatedAt', 'createdAt', 'dueDate', 'priority', 'title', 'status', 'position'],
+  })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({ status: 200, type: PaginatedTaskDto })
   list(@Param('workspaceId') workspaceId: string, @Query() query: unknown) {
     const parsed = taskListQuerySchema.parse(query);

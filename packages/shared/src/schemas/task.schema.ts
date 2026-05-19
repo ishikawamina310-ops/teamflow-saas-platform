@@ -33,6 +33,9 @@ export const taskListQuerySchema = paginationQuerySchema.extend({
   status: taskStatusSchema.optional(),
   priority: taskPrioritySchema.optional(),
   assigneeId: cuidSchema.optional(),
+  sortBy: z
+    .enum(['updatedAt', 'createdAt', 'dueDate', 'priority', 'title', 'status', 'position'])
+    .optional(),
 });
 
 export const taskParamsSchema = z.object({

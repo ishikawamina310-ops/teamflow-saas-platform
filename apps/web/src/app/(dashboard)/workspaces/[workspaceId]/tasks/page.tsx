@@ -1,9 +1,10 @@
 import { TasksPageContent } from '@/features/tasks/components/TasksPageContent';
 
-export default function WorkspaceTasksPage({
+export default async function WorkspaceTasksPage({
   params,
 }: {
-  params: { workspaceId: string };
+  params: Promise<{ workspaceId: string }>;
 }) {
-  return <TasksPageContent workspaceId={params.workspaceId} />;
+  const { workspaceId } = await params;
+  return <TasksPageContent workspaceId={workspaceId} />;
 }

@@ -4,14 +4,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 
-import { cn } from '@/lib/utils';
-
+import { LanguageSwitcher } from '@/features/i18n/components/LanguageSwitcher';
+import { useI18n } from '@/features/i18n/hooks/useI18n';
 import { WorkspaceSwitcher } from '@/features/workspaces/components/WorkspaceSwitcher';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
 import { useWorkspaceStore } from '@/stores/workspace.store';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
   const isAuthenticated = useAuthStore((s) => Boolean(s.accessToken && s.user));
@@ -25,7 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!hasHydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading…
+        {t('common.loading')}
       </div>
     );
   }
@@ -33,44 +35,50 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="relative z-20 hidden w-64 shrink-0 border-r bg-muted/30 p-6 md:block">
-        <div className="text-lg font-semibold">TeamFlow</div>
+    <div className="flex min-h-screen bg-zinc-950">
+      <aside className="relative z-20 hidden w-60 shrink-0 border-r border-zinc-800/60 bg-zinc-950 p-5 md:block">
+        <div className="text-base font-semibold tracking-tight text-foreground/95">TeamFlow</div>
+        <p className="mt-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground/80">
+          {t('dashboard.sidebarTagline')}
+        </p>
         <div className="relative z-30 mt-4">
           <WorkspaceSwitcher onDropdownOpenChange={setWorkspaceMenuOpen} />
         </div>
+        <LanguageSwitcher className="mt-3" />
         <nav
           className={cn(
-            'mt-8 space-y-1 text-sm text-muted-foreground transition-opacity',
+            'mt-6 space-y-0.5 text-[13px] text-muted-foreground transition-opacity',
             workspaceMenuOpen && 'pointer-events-none opacity-0',
           )}
         >
-          <Link className="block rounded px-3 py-2 hover:bg-accent" href="/dashboard">
-            Dashboard
+          <Link className="block rounded-md px-2.5 py-1.5 hover:bg-zinc-800/70 hover:text-foreground" href="/dashboard">
+            {t('common.dashboard')}
           </Link>
-          <a
-            className="block rounded px-3 py-2 hover:bg-accent"
+          <Link
+            className="block rounded-md px-2.5 py-1.5 hover:bg-zinc-800/70 hover:text-foreground"
             href={
               currentWorkspaceId
                 ? `/workspaces/${currentWorkspaceId}/projects`
                 : '/projects'
             }
           >
-            Projects
-          </a>
-          <a
-            className="block rounded px-3 py-2 hover:bg-accent"
+            {t('common.projects')}
+          </Link>
+          <Link
+            className="block rounded-md px-2.5 py-1.5 hover:bg-zinc-800/70 hover:text-foreground"
             href={
               currentWorkspaceId
                 ? `/workspaces/${currentWorkspaceId}/tasks`
                 : '/tasks'
             }
           >
-            Tasks
-          </a>
+            {t('common.tasks')}
+          </Link>
         </nav>
       </aside>
-      <main className="flex-1 p-8">{children}</main>
+      <main className="flex-1 bg-zinc-950 p-5 sm:p-7">
+        <div className="mx-auto max-w-7xl">{children}</div>
+      </main>
     </div>
   );
 }

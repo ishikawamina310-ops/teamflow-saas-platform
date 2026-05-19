@@ -63,19 +63,37 @@ async function main(): Promise<void> {
     },
   });
 
-  const taskSeeds = [
-    { title: 'Define brand palette', status: 'TODO' as const, position: 1 },
-    { title: 'Implement landing hero', status: 'IN_PROGRESS' as const, position: 2 },
-    { title: 'Review competitor sites', status: 'DONE' as const, position: 3 },
+  const taskSeeds: Array<{
+    title: string;
+    status: 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    position: number;
+    assigneeId: string | null;
+    dueDate: Date | null;
+  }> = [
+    { title: 'Setup AWS deployment pipeline', status: 'TODO', priority: 'HIGH', position: 1000, assigneeId: admin.id, dueDate: new Date('2026-05-28') },
+    { title: 'Implement workspace analytics dashboard', status: 'TODO', priority: 'MEDIUM', position: 2000, assigneeId: demo.id, dueDate: new Date('2026-06-02') },
+    { title: 'Add CSV export for task reports', status: 'TODO', priority: 'LOW', position: 3000, assigneeId: null, dueDate: null },
+    { title: 'Refactor RBAC middleware', status: 'IN_PROGRESS', priority: 'HIGH', position: 1000, assigneeId: admin.id, dueDate: new Date('2026-05-22') },
+    { title: 'Optimize Prisma query performance', status: 'IN_PROGRESS', priority: 'MEDIUM', position: 2000, assigneeId: demo.id, dueDate: new Date('2026-05-25') },
+    { title: 'Integrate Slack webhook notifications', status: 'IN_REVIEW', priority: 'MEDIUM', position: 1000, assigneeId: demo.id, dueDate: new Date('2026-05-21') },
+    { title: 'Improve mobile Kanban interactions', status: 'IN_REVIEW', priority: 'HIGH', position: 2000, assigneeId: admin.id, dueDate: new Date('2026-05-20') },
+    { title: 'Add activity log system', status: 'DONE', priority: 'MEDIUM', position: 1000, assigneeId: admin.id, dueDate: new Date('2026-05-15') },
+    { title: 'Configure CI/CD with GitHub Actions', status: 'DONE', priority: 'HIGH', position: 2000, assigneeId: demo.id, dueDate: new Date('2026-05-12') },
+    { title: 'Design system token documentation', status: 'DONE', priority: 'LOW', position: 3000, assigneeId: demo.id, dueDate: new Date('2026-05-10') },
   ];
 
   for (const t of taskSeeds) {
     await prisma.task.create({
       data: {
-        ...t,
+        title: t.title,
+        status: t.status,
+        priority: t.priority,
+        position: t.position,
+        dueDate: t.dueDate,
         projectId: project.id,
         authorId: admin.id,
-        assigneeId: demo.id,
+        assigneeId: t.assigneeId,
       },
     });
   }

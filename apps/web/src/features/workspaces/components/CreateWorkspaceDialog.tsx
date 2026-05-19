@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/features/i18n/hooks/useI18n';
 
 import { useCreateWorkspace } from '../hooks/useWorkspaces';
 
@@ -32,6 +33,7 @@ function slugifyName(name: string): string {
 }
 
 export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDialogProps) {
+  const { t } = useI18n();
   const createWorkspace = useCreateWorkspace();
 
   const {
@@ -78,17 +80,15 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create workspace</DialogTitle>
-          <DialogDescription>
-            Add a new workspace for your team. You will be the owner.
-          </DialogDescription>
+          <DialogTitle>{t('workspace.createTitle')}</DialogTitle>
+          <DialogDescription>{t('workspace.createDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="workspace-name">Name</Label>
+            <Label htmlFor="workspace-name">{t('workspace.name')}</Label>
             <Input
               id="workspace-name"
-              placeholder="Acme Corp"
+              placeholder={t('workspace.namePlaceholder')}
               autoComplete="off"
               {...register('name')}
             />
@@ -98,10 +98,10 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="workspace-slug">URL slug</Label>
+            <Label htmlFor="workspace-slug">{t('workspace.slug')}</Label>
             <Input
               id="workspace-slug"
-              placeholder="acme-corp"
+              placeholder={t('workspace.slugPlaceholder')}
               autoComplete="off"
               {...register('slug')}
             />
@@ -111,10 +111,10 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="workspace-description">Description (optional)</Label>
+            <Label htmlFor="workspace-description">{t('workspace.description')}</Label>
             <Input
               id="workspace-description"
-              placeholder="Our main workspace"
+              placeholder={t('workspace.descriptionPlaceholder')}
               autoComplete="off"
               {...register('description')}
             />
@@ -122,10 +122,10 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('workspace.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting || createWorkspace.isPending}>
-              {createWorkspace.isPending ? 'Creating…' : 'Create workspace'}
+              {createWorkspace.isPending ? t('workspace.creating') : t('workspace.createWorkspace')}
             </Button>
           </div>
         </form>

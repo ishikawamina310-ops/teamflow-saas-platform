@@ -10,6 +10,7 @@ import type {
   InviteMemberInput,
   InviteMemberResult,
   UpdateWorkspaceInput,
+  WorkspaceDashboardOverview,
   WorkspaceMemberView,
   WorkspaceSummary,
 } from '@teamflow/shared';
@@ -158,6 +159,180 @@ export class WorkspacesService {
     return members.map((m) => this.toMemberView(m));
   }
 
+  async getDashboardOverview(workspaceId: string): Promise<WorkspaceDashboardOverview> {
+    const [
+      workspace,
+      projectCount,
+      backlogTaskCount,
+      todoTaskCount,
+      inProgressTaskCount,
+      reviewTaskCount,
+      doneTaskCount,
+      overdueTaskCount,
+      recentTasks,
+      recentActivities,
+    ] = await this.prisma.$transaction([
+        this.prisma.workspace.findUnique({
+          where: { id: workspaceId },
+          include: {
+            _count: {
+              select: { members: true },
+            },
+          },
+        }),
+        this.prisma.project.count({
+          where: {
+            workspaceId,
+            deletedAt: null,
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            status: 'BACKLOG',
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            status: 'TODO',
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            status: 'IN_PROGRESS',
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            status: 'IN_REVIEW',
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            status: 'DONE',
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            deletedAt: null,
+            dueDate: { lt: new Date() },
+            status: { not: 'DONE' },
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+        }),
+        this.prisma.task.findMany({
+          where: {
+            deletedAt: null,
+            project: {
+              workspaceId,
+              deletedAt: null,
+            },
+          },
+          include: {
+            project: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            assignee: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 8,
+        }),
+        this.prisma.activityLog.findMany({
+          where: { workspaceId },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+
+    if (!workspace) {
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: 'Workspace not found.',
+      });
+    }
+
+    const todoCount = backlogTaskCount + todoTaskCount;
+    const totalTaskCount =
+      backlogTaskCount + todoTaskCount + inProgressTaskCount + reviewTaskCount + doneTaskCount;
+
+    return {
+      workspaceId: workspace.id,
+      workspaceName: workspace.name,
+      stats: {
+        memberCount: workspace._count.members,
+        projectCount,
+        totalTaskCount,
+        todoTaskCount: todoCount,
+        inProgressTaskCount,
+        reviewTaskCount,
+        doneTaskCount,
+        overdueTaskCount,
+      },
+      recentTasks: recentTasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        projectId: task.project.id,
+        projectName: task.project.name,
+        assigneeName: task.assignee?.name ?? null,
+        dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+        updatedAt: task.updatedAt.toISOString(),
+      })),
+      recentActivities: recentActivities.map((activity) => ({
+        id: activity.id,
+        action: activity.action,
+        targetType: activity.targetType,
+        targetId: activity.targetId,
+        actorId: activity.actor.id,
+        actorName: activity.actor.name,
+        createdAt: activity.createdAt.toISOString(),
+      })),
+    };
+  }
+
   async inviteMember(
     workspaceId: string,
     invitedById: string,
@@ -276,6 +451,28 @@ export class WorkspacesService {
     await this.prisma.workspaceMember.delete({
       where: { workspaceId_userId: { workspaceId, userId: targetUserId } },
     });
+  }
+
+  async deleteWorkspace(workspaceId: string, userId: string): Promise<void> {
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: 'Workspace not found.',
+      });
+    }
+
+    if (workspace.ownerId !== userId) {
+      throw new ForbiddenException({
+        code: 'WORKSPACE_DELETE_FORBIDDEN',
+        message: 'Only the workspace owner can delete the workspace.',
+      });
+    }
+
+    await this.prisma.workspace.delete({ where: { id: workspaceId } });
   }
 
   private async getWorkspaceRecord(workspaceId: string) {

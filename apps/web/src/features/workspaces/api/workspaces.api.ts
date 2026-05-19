@@ -2,6 +2,7 @@ import type {
   CreateWorkspaceInput,
   InviteMemberInput,
   InviteMemberResult,
+  WorkspaceDashboardOverview,
   UpdateWorkspaceInput,
   WorkspaceMemberView,
   WorkspaceSummary,
@@ -22,9 +23,14 @@ export const workspacesApi = {
   listMembers: (workspaceId: string) =>
     apiGet<WorkspaceMemberView[]>(`/workspaces/${workspaceId}/members`),
 
+  getDashboardOverview: (workspaceId: string) =>
+    apiGet<WorkspaceDashboardOverview>(`/workspaces/${workspaceId}/dashboard`),
+
   inviteMember: (workspaceId: string, body: InviteMemberInput) =>
     apiPost<InviteMemberResult>(`/workspaces/${workspaceId}/members/invite`, body),
 
   removeMember: (workspaceId: string, userId: string) =>
     apiDelete<void>(`/workspaces/${workspaceId}/members/${userId}`),
+
+  delete: (workspaceId: string) => apiDelete<void>(`/workspaces/${workspaceId}`),
 };

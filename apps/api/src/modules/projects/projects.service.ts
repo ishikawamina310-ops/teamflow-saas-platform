@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ActivityAction, type ProjectStatus } from '@prisma/client';
+import { ActivityAction, type Prisma, type ProjectStatus } from '@prisma/client';
 import type {
   CreateProjectInput,
   PaginatedResult,
@@ -48,7 +48,7 @@ export class ProjectsService {
             },
           },
         },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: this.buildOrderBy(query),
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -210,5 +210,21 @@ export class ProjectsService {
       createdAt: project.createdAt.toISOString(),
       updatedAt: project.updatedAt.toISOString(),
     };
+  }
+
+  private buildOrderBy(query: ProjectListQuery): Prisma.ProjectOrderByWithRelationInput {
+    const sortOrder = query.sortOrder ?? 'desc';
+
+    switch (query.sortBy) {
+      case 'createdAt':
+        return { createdAt: sortOrder };
+      case 'name':
+        return { name: sortOrder };
+      case 'status':
+        return { status: sortOrder };
+      case 'updatedAt':
+      default:
+        return { updatedAt: sortOrder };
+    }
   }
 }

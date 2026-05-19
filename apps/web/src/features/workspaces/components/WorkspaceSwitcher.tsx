@@ -1,6 +1,7 @@
 'use client';
 
-import { Building2, Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react';
+import { Building2, Check, ChevronsUpDown, Loader2, Plus, Trash2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/features/i18n/hooks/useI18n';
 import { cn } from '@/lib/utils';
 import { useWorkspaceStore } from '@/stores/workspace.store';
 
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog';
 import {
   useCurrentWorkspace,
+  useDeleteWorkspace,
   useSetCurrentWorkspace,
   useWorkspaces,
 } from '../hooks/useWorkspaces';
@@ -27,13 +30,25 @@ interface WorkspaceSwitcherProps {
 }
 
 export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherProps) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const { data: workspaces, isLoading, isError } = useWorkspaces();
   const { current } = useCurrentWorkspace();
   const setCurrentWorkspace = useSetCurrentWorkspace();
+  const deleteWorkspace = useDeleteWorkspace();
   const currentWorkspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const setCurrentWorkspaceId = useWorkspaceStore((s) => s.setCurrentWorkspace);
+
+  const handleDeleteWorkspace = () => {
+    if (!current) return;
+    if (!window.confirm(t('workspace.deleteConfirm', { name: current.name }))) return;
+    deleteWorkspace.mutate(current.id);
+    handleOpenChange(false);
+    router.push('/dashboard' as never);
+  };
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -52,7 +67,7 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
     return (
       <Button variant="outline" className="w-full justify-start" disabled>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading workspaces…
+        {t('workspace.loading')}
       </Button>
     );
   }
@@ -60,7 +75,7 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
   if (isError) {
     return (
       <Button variant="outline" className="w-full justify-start text-destructive" disabled>
-        Failed to load workspaces
+        {t('workspace.failedLoad')}
       </Button>
     );
   }
@@ -77,7 +92,7 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
           >
             <span className="flex items-center gap-2 truncate">
               <Building2 className="h-4 w-4 shrink-0 opacity-70" />
-              <span className="truncate">{current?.name ?? 'Select workspace'}</span>
+              <span className="truncate">{current?.name ?? t('workspace.selectWorkspace')}</span>
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -89,7 +104,7 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
           sideOffset={6}
           collisionPadding={8}
         >
-          <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('workspace.workspaces')}</DropdownMenuLabel>
           {workspaces?.map((workspace) => (
             <DropdownMenuItem
               key={workspace.id}
@@ -97,6 +112,11 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
               onSelect={() => {
                 setCurrentWorkspace(workspace);
                 handleOpenChange(false);
+                const wsRouteMatch = pathname.match(/^\/workspaces\/[^/]+(.*)$/);
+                if (wsRouteMatch) {
+                  const subPath = wsRouteMatch[1] || '';
+                  router.push(`/workspaces/${workspace.id}${subPath}` as never);
+                }
               }}
             >
               <Check
@@ -111,7 +131,7 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
           ))}
           {workspaces?.length === 0 && (
             <DropdownMenuItem disabled className="bg-popover">
-              No workspaces yet
+              {t('workspace.noWorkspaces')}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
@@ -123,8 +143,18 @@ export function WorkspaceSwitcher({ onDropdownOpenChange }: WorkspaceSwitcherPro
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Create workspace
+            {t('workspace.createWorkspace')}
           </DropdownMenuItem>
+          {current && current.role === 'OWNER' && (
+            <DropdownMenuItem
+              className="bg-popover text-destructive focus:bg-destructive/10 focus:text-destructive"
+              onSelect={handleDeleteWorkspace}
+              disabled={deleteWorkspace.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t('workspace.delete')}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

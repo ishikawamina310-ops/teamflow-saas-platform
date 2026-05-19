@@ -39,6 +39,7 @@ import {
   CreateWorkspaceDto,
   InviteMemberDto,
   InviteMemberResultDto,
+  WorkspaceDashboardOverviewDto,
   UpdateWorkspaceDto,
   WorkspaceMemberDto,
   WorkspaceSummaryDto,
@@ -106,6 +107,15 @@ export class WorkspacesController {
     return this.workspaces.listMembers(workspaceId);
   }
 
+  @Get(':workspaceId/dashboard')
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({ summary: 'Get dashboard overview for a workspace' })
+  @ApiParam({ name: 'workspaceId' })
+  @ApiResponse({ status: 200, type: WorkspaceDashboardOverviewDto })
+  dashboardOverview(@Param('workspaceId') workspaceId: string) {
+    return this.workspaces.getDashboardOverview(workspaceId);
+  }
+
   @Post(':workspaceId/members/invite')
   @UseGuards(WorkspaceRolesGuard)
   @WorkspaceRoles('ADMIN')
@@ -120,6 +130,20 @@ export class WorkspacesController {
     @Body(new ZodValidationPipe(inviteMemberSchema)) body: InviteMemberInput,
   ) {
     return this.workspaces.inviteMember(workspaceId, user.id, body);
+  }
+
+  @Delete(':workspaceId')
+  @UseGuards(WorkspaceRolesGuard)
+  @WorkspaceRoles('OWNER')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a workspace (owner only)' })
+  @ApiParam({ name: 'workspaceId' })
+  @ApiResponse({ status: 204 })
+  deleteWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.workspaces.deleteWorkspace(workspaceId, user.id);
   }
 
   @Delete(':workspaceId/members/:userId')

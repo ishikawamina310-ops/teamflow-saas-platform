@@ -1,94 +1,198 @@
+===== README.md START =====
+
 # TeamFlow
 
-TeamFlow は、Next.js・NestJS・PostgreSQL・Docker・AWS を用いて構築した、マルチテナント対応の SaaS 型チームコラボレーションプラットフォームです。
+プロダクションレベルのフルスタックSaaS型タスク・プロジェクト管理プラットフォームです。
 
-Production-ready なクラウドネイティブアーキテクチャを想定し、拡張性・保守性・運用性を重視して設計しています。
-
-🇺🇸 English README: [README.en.md](./README.en.md)
-
----
-
-# 概要
-
-TeamFlow は、チームコラボレーション・タスク管理・ワークスペース管理を目的としたフルスタック SaaS アプリケーションです。
-
-モダンな Web アーキテクチャとエンタープライズレベルの開発構成を意識して実装しています。
-
-主な特徴:
-
-- マルチテナント SaaS アーキテクチャ
-- RBAC ベースの認可システム
-- ワークスペース管理
-- プロジェクト / タスク管理
-- REST API 構成
-- Docker ベース開発環境
-- CI/CD 対応構成
-- AWS クラウドインフラ設計
+Next.js / NestJS / Prisma / PostgreSQL をベースに、
+モダンなKanban UX、RBAC認可、Swagger APIドキュメント、Workspaceベースのマルチテナント構成を実装しています。
 
 ---
 
-# 技術スタック
+## Dashboard Overview
 
-## Frontend
+WorkspaceベースのSaaSダッシュボード。
 
-- Next.js (App Router)
+- タスク統計
+- Recent Activity
+- Recent Tasks
+- Workspace Summary
+- Responsive SaaS UI
+
+![Dashboard](./public/screenshots/dashboard.png)
+
+---
+
+## 主な機能
+
+- Workspaceベースのマルチテナント構成
+- Kanbanタスク管理
+- Drag & Drop対応
+- Inline Quick Create UX
+- JWT認証
+- Role-Based Access Control (RBAC)
+- Swagger/OpenAPI ドキュメント
+- React Queryによるキャッシュ管理
+- Prisma ORM
+- PostgreSQL
+- AWSデプロイ対応設計
+- モバイル対応レスポンシブUI
+
+---
+
+## 技術スタック
+
+### Frontend
+
+- Next.js 15
+- React
 - TypeScript
-- TailwindCSS
+- Tailwind CSS
+- shadcn/ui
 - React Query
 - Zustand
-- shadcn/ui
 
-## Backend
+### Backend
 
 - NestJS
+- Prisma
 - PostgreSQL
-- Prisma ORM
 - JWT Authentication
+- Swagger/OpenAPI
 - Zod Validation
 
-## Infrastructure
+### Infrastructure
 
 - Docker
+- AWS Ready Architecture
 - GitHub Actions
-- AWS ECS/Fargate
-- Amazon RDS
-- Amazon S3
-- CloudFront
+- pnpm Workspace
+- TurboRepo
 
 ---
 
-# 主な機能
+## Kanban Board
 
-## 認証機能
+モダンSaaSスタイルのKanban UIを実装。
 
-- JWT 認証
-- Refresh Token
-- パスワードハッシュ化
-- セッション管理
+### 主な特徴
 
----
+- Drag & Drop
+- Optimistic Updates
+- Inline Task Creation
+- Keyboard Accessible DnD
+- Mobile Friendly UX
 
-## ワークスペース管理
-
-- ワークスペース単位のマルチテナント構成
-- メンバー招待機能
-- ワークスペース切り替え
-- 権限管理
+![Kanban Board](./public/screenshots/kanban-board.png)
 
 ---
 
-## RBAC 認可
+## Quick Create UX
 
-- ADMIN / MEMBER ロール
-- Route Protection
-- ワークスペース単位の認可制御
-- Role Guard
+Linear / Jira スタイルの高速タスク作成UX。
+
+![Quick Create](./public/screenshots/quick-create-inline.png)
 
 ---
 
-## API ドキュメント
+## Swagger API Documentation
 
-Swagger API ドキュメントを提供しています。
+NestJS + Swagger によるREST APIドキュメント。
+
+### API Features
+
+- JWT Authentication
+- Typed Request / Response Schema
+- Workspace-scoped API Design
+- RBAC Protected Endpoints
+
+![Swagger API](./public/screenshots/swagger-api.png)
+
+---
+
+## アーキテクチャ
+
+```text
+apps/
+ ├── web      → Next.js Frontend
+ └── api      → NestJS Backend
+
+packages/
+ ├── shared   → shared types/schemas
+```
+
+---
+
+## ローカル実行
+
+### 1. Install dependencies
 
 ```bash
+pnpm install
+```
+
+### 2. Start PostgreSQL
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d
+```
+
+### 3. Setup environment variables
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+```
+
+### 4. Prisma setup
+
+```bash
+pnpm --filter @teamflow/api prisma:generate
+pnpm --filter @teamflow/api prisma:migrate
+pnpm --filter @teamflow/api prisma:seed
+```
+
+### 5. Run development server
+
+```bash
+pnpm dev
+```
+
+---
+
+## API Documentation
+
+```text
 http://localhost:4000/api/docs
+```
+
+---
+
+## Demo Account
+
+```text
+Email: admin@teamflow.dev
+Password: Admin@1234
+```
+
+---
+
+## Roadmap
+
+- File Upload (S3)
+- Realtime Notifications
+- Activity Logs
+- Analytics Dashboard
+- AWS ECS Deployment
+- Terraform Infrastructure
+
+---
+
+## Author
+
+石川美菜 (Ishikawa Mina)
+
+Fullstack Engineer
+Japan
+
+===== README.md END =====

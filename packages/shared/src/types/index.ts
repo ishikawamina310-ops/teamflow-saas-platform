@@ -53,6 +53,10 @@ export interface SessionUser {
 
 export type {
   InviteMemberResult,
+  WorkspaceDashboardActivity,
+  WorkspaceDashboardOverview,
+  WorkspaceDashboardRecentTask,
+  WorkspaceDashboardStats,
   WorkspaceInviteView,
   WorkspaceMemberView,
   WorkspaceSummary,
