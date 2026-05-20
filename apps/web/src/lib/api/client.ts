@@ -1,4 +1,6 @@
 import axios, {
+  create,
+  isAxiosError,
   type AxiosError,
   type AxiosInstance,
   type AxiosRequestConfig,
@@ -11,7 +13,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1
 
 type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
-export const apiClient: AxiosInstance = axios.create({
+export const apiClient: AxiosInstance = create({
   baseURL: API_URL,
   withCredentials: true,
   timeout: 15_000,
@@ -46,7 +48,7 @@ async function refreshAccessToken(): Promise<string | null> {
       return data.data.accessToken;
     } catch (err) {
       // Only clear session when the server rejects refresh — not on network/API-down errors.
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
+      if (isAxiosError(err) && err.response?.status === 401) {
         useAuthStore.getState().clear();
       }
       return null;
